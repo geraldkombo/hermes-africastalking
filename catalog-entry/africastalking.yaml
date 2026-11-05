@@ -1,9 +1,11 @@
 # Draft catalog entry for the PR to NousResearch/hermes-agent
 # (target path there: plugin-catalog/africastalking.yaml)
-# sha: FILL with the full 40-char commit SHA at PR time (rule 2 — exact pins).
+# Pinned commit (rule 2 — exact pins). ALWAYS quote: an unquoted numeric-looking
+# sha parses as int/float in YAML. This commit passed `hermes plugins validate
+# --install-deps` (ok:true, 15/15) and the 53-test offline suite.
 name: africastalking
 repo: https://github.com/geraldkombo/hermes-africastalking
-sha: "0000000000000000000000000000000000000000"  # ALWAYS quote: an unquoted numeric-looking sha parses as int/float in YAML
+sha: "149a2c1e2edc20679da17da52534730a72ef6ea2"
 subdir: africastalking
 description: >
   Africa's Talking platform adapter: talk to Hermes over SMS (two-way) and USSD
