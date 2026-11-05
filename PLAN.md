@@ -105,7 +105,10 @@ reference adapter), `scripts/validate_plugin_catalog.py` (the exact CI validator
 9. ⏳ Sandbox live test (needs user's free AT account: AT_USERNAME + AT_API_KEY in ~/.hermes/.env;
    wizard import failed at install so ~/.hermes/.env may need `hermes` first-run setup too)
 10. ⏳ Demo video (≤90 s): AT sandbox simulator ⇄ Hermes answering live
-11. ⏳ Catalog PR (plugin-catalog/africastalking.yaml, QUOTED 40-char SHA) via gh + X post + Typeform
+11. ✅ Catalog PR OPEN: https://github.com/NousResearch/hermes-agent/pull/149592
+    (fork geraldkombo/hermes-agent, branch plugin-catalog-africastalking, entry commit 6c4f8638;
+    opened entirely via REST because receive-pack is broken; entry re-validated comment-stripped:
+    `OK: 1 file(s) valid`). Remaining: X post + Typeform (need demo video first).
 
 ## Judging rubric mapping
 - Usefulness: reaches 1B+ feature-phone users no other channel touches

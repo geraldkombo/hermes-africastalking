@@ -91,4 +91,5 @@ no internet, no smartphone, no app.
 - Adversarial diff review (fresh context, vs base.py/IRC/guide): verdict
   ship-with-fixes — 1 major (non-ASCII `?secret=` TypeError → 500s) + 5 minor
   findings, ALL fixed and regression-tested before this PR.
-- Live sandbox run: (paste at PR time — SMS round-trip + USSD menu via AT simulator)
+- Live sandbox run: pending — free AT sandbox credentials being provisioned;
+  SMS round-trip + USSD menu evidence will be added as a PR comment.
