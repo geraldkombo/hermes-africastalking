@@ -38,7 +38,7 @@ from gateway.platforms._shared import (
 )
 from gateway.platforms.base import BasePlatformAdapter, SendResult
 from gateway.platforms.event import MessageEvent, MessageType
-from gateway.platforms.helpers import MessageDeduplicator, cancel_task
+from gateway.platforms.helpers import MessageDeduplicator
 
 from . import at_client, ussd
 from .adapter_hint import PLATFORM_HINT
@@ -178,7 +178,7 @@ class AfricaTalkingAdapter(BasePlatformAdapter):
         if not (self.username and self.api_key):
             return SendResult(success=False, error="Africa's Talking credentials not configured")
         last_id: Optional[str] = None
-        continuation: list[str] = []
+        ids: list[str] = []
         for part in parts:
             try:
                 parsed = await asyncio.to_thread(
@@ -186,19 +186,23 @@ class AfricaTalkingAdapter(BasePlatformAdapter):
                 )
             except at_client.ATError as exc:
                 logger.warning("Africa's Talking: send to %s failed — %s", _mask_phone(phone), exc)
-                retryable = exc.status is None or exc.status >= 500 or exc.status == 429
+                # Only offer the base class's automatic retry when nothing went out yet:
+                # a mid-burst retry would re-send earlier parts as duplicate paid SMS
+                # (and on read-timeouts AT may already have accepted the part).
+                retryable = not ids and (exc.status is None or exc.status >= 500 or exc.status == 429)
                 return SendResult(success=False, error=str(exc), retryable=retryable)
             ok, detail = at_client.sms_response_summary(parsed)
             if not ok:
                 logger.warning("Africa's Talking: send to %s rejected — %s", _mask_phone(phone), detail)
-                return SendResult(success=False, error=f" rejected: {detail}")
+                return SendResult(success=False, error=f"Africa's Talking rejected: {detail}")
             mid = _recipient_message_id(parsed)
             if mid:
-                if last_id:
-                    continuation.append(mid)
-                last_id = mid
+                ids.append(mid)
+        # Base contract: message_id is the LAST chunk's id (later edits target the
+        # newest chunk); continuation_message_ids holds the earlier ids in send order.
+        last_id = ids[-1] if ids else None
         return SendResult(
-            success=True, message_id=last_id or uuid.uuid4().hex, continuation_message_ids=tuple(continuation)
+            success=True, message_id=last_id or uuid.uuid4().hex, continuation_message_ids=tuple(ids[:-1])
         )
 
     # ── inbound: webhook handlers ────────────────────────────────────────────
@@ -213,7 +217,12 @@ class AfricaTalkingAdapter(BasePlatformAdapter):
         if not self.webhook_secret:
             return True
         provided = request.query.get("secret", "")
-        return hmac.compare_digest(provided, self.webhook_secret)
+        # compare_digest(str, str) raises TypeError on non-ASCII — and the query
+        # param is attacker-controlled percent-decoded UTF-8. Compare bytes.
+        return hmac.compare_digest(
+            provided.encode("utf-8", "surrogateescape"),
+            self.webhook_secret.encode("utf-8", "surrogateescape"),
+        )
 
     def _spawn(self, coro) -> None:
         task = asyncio.create_task(coro)
@@ -371,21 +380,17 @@ async def _standalone_send(
 
 
 def interactive_setup() -> None:
-    """``hermes gateway setup`` flow (lazy hermes_cli imports keep this module
-    importable outside the CLI)."""
-    from hermes_cli.setup import (
-        get_env_value,
-        print_header,
-        print_info,
-        print_success,
-        print_warning,
-        prompt,
-        save_env_value,
-    )
-    from hermes_cli.setup_platforms import declines_reconfigure
+    """``hermes gateway setup`` flow. Lazy hermes_cli imports keep this module
+    importable outside the CLI; these are the documented PUBLIC setup modules
+    from the platform-plugin guide (gateway_setup_wizard / setup / cli_output /
+    config) — no private core imports."""
+    from hermes_cli.cli_output import print_info, print_success, print_warning
+    from hermes_cli.config import get_env_value, save_env_value
+    from hermes_cli.gateway_setup_wizard import confirm_reconfigure, print_setup_header, prompt_csv
+    from hermes_cli.setup import prompt
 
-    print_header("Africa's Talking")
-    if declines_reconfigure("Africa's Talking", "Reconfigure Africa's Talking?", "AT_USERNAME"):
+    print_setup_header("Africa's Talking")
+    if not confirm_reconfigure("Africa's Talking", "AT_USERNAME", "AT_API_KEY"):
         return
     print_info("Chat with Hermes via SMS + USSD on any phone — feature phones included.")
     print_info("The free sandbox works for testing: https://account.africastalking.com/auth/register")
@@ -394,11 +399,11 @@ def interactive_setup() -> None:
     if not username:
         print_warning("Username is required — skipping Africa's Talking setup")
         return
-    save_env_value("AT_USERNAME", username.strip())
     api_key = prompt("API key (AT dashboard → your app → Settings → API Key)", password=True)
     if not api_key:
         print_warning("API key is required — skipping Africa's Talking setup")
         return
+    save_env_value("AT_USERNAME", username.strip())
     save_env_value("AT_API_KEY", api_key.strip())
     sender_id = prompt("Sender ID / shortcode (optional — production only)", default=get_env_value("AT_SENDER_ID") or "")
     save_env_value("AT_SENDER_ID", sender_id.strip())
@@ -411,6 +416,9 @@ def interactive_setup() -> None:
     secret = prompt("Webhook secret (recommended — appended to callback URLs as ?secret=…)", password=True)
     if secret:
         save_env_value("AT_WEBHOOK_SECRET", secret.strip())
+    allowed = prompt_csv("Phone numbers allowed to use the agent (comma-separated, empty = nobody until pairing)",
+                         get_env_value("AT_ALLOWED_USERS") or "")
+    save_env_value("AT_ALLOWED_USERS", allowed)
     print()
     print_info("Next steps:")
     print_info("  1. Expose the callback port, e.g.:  cloudflared tunnel --url http://127.0.0.1:8055")

@@ -20,7 +20,6 @@ from typing import Iterable, Optional
 
 API_BASE = "https://api.africastalking.com"
 MESSAGING_PATH = "/version1/messaging"
-SANDBOX_USERNAME = "sandbox"
 
 # AT posts callbacks as application/x-www-form-urlencoded.
 _CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")

@@ -78,14 +78,26 @@ reference adapter), `scripts/validate_plugin_catalog.py` (the exact CI validator
 ## Build order
 1. ✅ Repo + this plan
 2. ✅ All plugin code: at_client.py, ussd.py, adapter.py, adapter_hint.py, plugin.yaml, __init__.py
-3. ✅ 31/31 offline tests green (local Python 3.13); py_compile clean on every module
+3. ✅ 53/53 offline tests green (local Python 3.13.16); py_compile clean on every module
+   Evidence: `Ran 53 tests in 2.321s / OK` (client 22 + USSD 9 + adapter 22 via hermes_stubs)
 4. ✅ Catalog entry draft validated with the REAL CI script: `OK: 1 file(s) valid` (exit 0)
-5. ✅ README + LICENSE + .gitignore + bundled setup skill
-6. ⏳ Hermes CLI install (background since ~21:00) → `hermes plugins doctor` + `hermes plugins validate africastalking --install-deps` → fix findings
-7. ⏳ git commit (local) → push public (user-approved plan) → pin sha
-8. ⏳ Sandbox live test (needs user's free AT account: AT_USERNAME + AT_API_KEY in ~/.hermes/.env)
-9. ⏳ Demo video (≤90 s): AT sandbox simulator ⇄ Hermes answering live
-10. ⏳ Catalog PR (plugin-catalog/africastalking.yaml, quoted 40-char SHA) via gh + X post + Typeform
+5. ✅ README + LICENSE + .gitignore + bundled setup skill + PR-description draft
+6. ✅ Hermes CLI installed (v0.22.7 detached @ b200f5bc60, `~\AppData\Local\hermes\bin\hermes.exe`;
+   the installer's interactive setup wizard exits 1 in background shells — harmless, nothing imported).
+   ✅ `hermes plugins validate africastalking --install-deps --json` → **ok: true, exit 0, 15/15 checks PASS**.
+   Only warning: `tunnel_service` caution (SKILL.md + wizard hint) — inherent to a webhook platform,
+   disclosed; plugin never runs a tunnel itself. Private-import warnings ELIMINATED by moving
+   interactive_setup to the guide's public modules (gateway_setup_wizard/setup/cli_output/config).
+7. ✅ Adversarial diff-review (fresh-context subagent vs real base.py/IRC/guide): verdict
+   ship-with-fixes → ALL 6 findings fixed: non-ASCII ?secret= TypeError (major; now bytes-compare
+   + regression test), mid-burst retryable→duplicate paid SMS (now `not ids and …`), adapter paths
+   untested (added hermes_stubs.py + test_adapter.py, 22 tests), orphan SANDBOX_USERNAME (deleted),
+   PR-description cancel_task overstatement (corrected), evidence gaps (this section).
+8. ⏳ git commit fixes → push public repo (user approval per plan) → pin sha in catalog entry
+9. ⏳ Sandbox live test (needs user's free AT account: AT_USERNAME + AT_API_KEY in ~/.hermes/.env;
+   wizard import failed at install so ~/.hermes/.env may need `hermes` first-run setup too)
+10. ⏳ Demo video (≤90 s): AT sandbox simulator ⇄ Hermes answering live
+11. ⏳ Catalog PR (plugin-catalog/africastalking.yaml, QUOTED 40-char SHA) via gh + X post + Typeform
 
 ## Judging rubric mapping
 - Usefulness: reaches 1B+ feature-phone users no other channel touches

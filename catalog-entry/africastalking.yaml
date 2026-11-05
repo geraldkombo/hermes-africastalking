@@ -12,7 +12,7 @@ description: >
   constant-time ?secret= guard) and sends replies through Africa's Talking's
   REST API with word-boundary splitting into 160-char parts and a hard cap so
   agent essays cannot become unbounded SMS bills. Cron delivery via a
-  standalone sender, gateway setup wizard, bundled setup skill, and 31 offline
+  standalone sender, gateway setup wizard, bundled setup skill, and 53 offline
   tests. Works fully on the free AT sandbox; production shortcodes are the
   user's own AT account. Disclosures: outbound HTTPS to api.africastalking.com
   only; binds 127.0.0.1:8055 for callbacks (user must tunnel it deliberately);

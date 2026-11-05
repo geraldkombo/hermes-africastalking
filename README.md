@@ -126,8 +126,8 @@ What this plugin does at runtime — everything else it does *not* do:
 ## Development
 
 ```
-python -m unittest discover -s africastalking/tests -t . -v   # 31 offline tests, no network
-hermes plugins validate africastalking --install-deps         # catalog CI check
+python -m unittest discover -s africastalking/tests -t . -v   # 53 offline tests, no network
+hermes plugins validate africastalking --install-deps         # catalog CI check → ok: true, 15/15
 ```
 
 Layout:
