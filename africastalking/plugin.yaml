@@ -1,0 +1,54 @@
+name: africastalking
+label: Africa's Talking
+kind: platform
+version: 1.0.0
+description: >
+  Africa's Talking gateway adapter for Hermes Agent. Chat with the agent via
+  SMS (two-way) and USSD menus from any phone — feature phones included, no
+  internet, no app, no smartphone required. Inbound callbacks are served by a
+  small local webhook server (aiohttp, bundled with Hermes core); outbound SMS
+  uses Africa's Talking's REST API over Python stdlib HTTP. Works fully on the
+  free Africa's Talking sandbox for testing; production needs the user's own
+  AT app credentials and shortcode.
+author: Gerald Kombo
+requires_hermes: ">=0.22"
+requires_env:
+  - name: AT_USERNAME
+    description: "Africa's Talking app username (use 'sandbox' for the free sandbox app)"
+    prompt: "Africa's Talking username"
+    url: "https://account.africastalking.com/auth/register"
+    password: false
+  - name: AT_API_KEY
+    description: "API key for your Africa's Talking app (dashboard → app → Settings → API Key)"
+    prompt: "API key"
+    url: "https://account.africastalking.com/"
+    password: true
+optional_env:
+  - name: AT_SENDER_ID
+    description: "Sender ID or shortcode replies are sent from (production only; sandbox ignores it)"
+    prompt: "Sender ID / shortcode (optional)"
+    password: false
+  - name: AT_CALLBACK_HOST
+    description: "Interface the callback webhook server binds to (default 127.0.0.1; tunnel it for public access)"
+    prompt: "Callback host (optional)"
+    password: false
+  - name: AT_CALLBACK_PORT
+    description: "Port for the inbound callback webhook server (default 8055)"
+    prompt: "Callback port (optional)"
+    password: false
+  - name: AT_WEBHOOK_SECRET
+    description: "Secret required as ?secret=… on callback URLs — strongly recommended when tunnelling"
+    prompt: "Webhook secret (recommended)"
+    password: true
+  - name: AT_ALLOWED_USERS
+    description: "Comma-separated phone numbers allowed to talk to the agent (e.g. +254712345678)"
+    prompt: "Allowed phone numbers (comma-separated)"
+    password: false
+  - name: AT_ALLOW_ALL_USERS
+    description: "Allow anyone who can reach the shortcode to talk to the agent (dev/sandbox only)"
+    prompt: "Allow all users? (true/false)"
+    password: false
+  - name: AT_HOME_CHANNEL
+    description: "Phone number for cron / notification delivery (deliver=africastalking)"
+    prompt: "Home phone number (or empty)"
+    password: false
